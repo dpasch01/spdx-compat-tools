@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import ac.ucy.cs.spdx.compatibility.LicenseCompatibility;
 import ac.ucy.cs.spdx.license.License;
+import ac.ucy.cs.spdx.parser.LicenseExpression;
 
 public class ViolationAnalysisInfo {
 	private ArrayList<SpdxLicensePairConflictError> unarySpdxErrors;
@@ -70,7 +71,9 @@ public class ViolationAnalysisInfo {
 		for (SpdxLicensePairConflictError unaryError : unaryErrors) {
 			for (String declared : unaryError.getDeclaredLicenses()) {
 				if (!multipleDeclared.contains(declared)) {
-					multipleDeclared.add(declared);
+					if(!Arrays.asList(LicenseExpression.ignoredLicenseList).contains(declared)){
+						multipleDeclared.add(declared);
+					}		
 				}
 			}
 

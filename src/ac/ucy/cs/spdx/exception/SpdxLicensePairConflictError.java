@@ -1,6 +1,7 @@
 package ac.ucy.cs.spdx.exception;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import ac.ucy.cs.spdx.compatibility.LicenseCompatibility;
 import ac.ucy.cs.spdx.license.License;
@@ -18,7 +19,13 @@ public class SpdxLicensePairConflictError {
 		LicenseExpression expression = spdxCaptured.getLicenseExpression();
 
 		this.declaredLicenses = new ArrayList<String>();
-		this.declaredLicenses.addAll(expression.getLicenses());
+				
+		for(String declared:expression.getLicenses()){
+			if(!Arrays.asList(LicenseExpression.ignoredLicenseList).contains(declared)){
+				this.declaredLicenses.add(declared);
+			}		
+		}
+		
 		this.proposedLicenses = new ArrayList<License>();
 		if ((!expression.isDisjunctive())
 				&& (!LicenseCompatibility.areCompatible(expression

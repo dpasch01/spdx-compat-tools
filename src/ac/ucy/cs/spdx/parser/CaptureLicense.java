@@ -1,6 +1,9 @@
 package ac.ucy.cs.spdx.parser;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 import org.apache.commons.io.FilenameUtils;
 import org.spdx.rdfparser.InvalidSPDXAnalysisException;
@@ -31,7 +34,8 @@ public class CaptureLicense {
 	private SpdxDocument captureDocument;
 	private LicenseExpression captureLicenses;
 	private SpdxPackage capturePackage;
-
+	private HashMap<String, String> referencedLicenses;
+	
 	/**
 	 * Returns the concluded license of the current {@link SPDXPackage}. If
 	 * there is no concluded license in the package it must return "NONE", or if
@@ -56,6 +60,17 @@ public class CaptureLicense {
 		return this.captureDocument.getExtractedLicenseInfos();
 	}
 
+	public ArrayList<String> getExtractedLicensesList()
+			throws InvalidSPDXAnalysisException {
+		ArrayList<String> extractedLicenses=new ArrayList<String>();
+		for(ExtractedLicenseInfo extractedLicense:this.getExtractedLicenses()){
+			if(!Arrays.asList(LicenseExpression.ignoredLicenseList).contains(extractedLicense.getName())){
+				extractedLicenses.add(extractedLicense.getName());
+			}
+		}
+		return extractedLicenses;
+	}
+	
 	/**
 	 * Returns the declared licenses of the current {@link SPDXPackage}. The
 	 * {@link AnyLicenseInfo} returned containes a license expression of the
@@ -99,10 +114,15 @@ public class CaptureLicense {
 						.toString());
 
 		this.setFileName(FilenameUtils.getBaseName(path));
+		this.setReferencedLicenses(new HashMap<String, String>());
+		for(ExtractedLicenseInfo exLicense:spdxDoc.getExtractedLicenseInfos()){
+			referencedLicenses.put(exLicense.getLicenseId(), exLicense.getName());
+		}
+			
 		this.captureDocument = spdxDoc;
 		this.capturePackage = spdxPackage;
 		this.captureLicenses = LicenseExpression.parseExpression(declared
-				.toString());
+				.toString(),this.referencedLicenses);
 	}
 
 	/**
@@ -148,6 +168,20 @@ public class CaptureLicense {
 	 */
 	public void setFileName(String fileName) {
 		this.fileName = fileName;
+	}
+
+	/**
+	 * @return the referencedLicenses
+	 */
+	public HashMap<String, String> getReferencedLicenses() {
+		return referencedLicenses;
+	}
+
+	/**
+	 * @param referencedLicenses the referencedLicenses to set
+	 */
+	public void setReferencedLicenses(HashMap<String, String> referencedLicenses) {
+		this.referencedLicenses = referencedLicenses;
 	}
 
 	/*
