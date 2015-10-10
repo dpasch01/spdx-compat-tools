@@ -1,0 +1,2 @@
+
+mvn install:install-file -Dfile=../../app-root/repo/spdx-tools-2.0.0-jar-with-dependencies.jar -DgroupId=org.spdx -DartifactId=spdx-tools -Dversion=2.0.0 -Dpackaging=jar
