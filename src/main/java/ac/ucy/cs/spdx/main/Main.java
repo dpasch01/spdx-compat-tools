@@ -10,6 +10,7 @@ import org.spdx.rdfparser.model.ExternalDocumentRef;
 import org.spdx.spdxspreadsheet.InvalidLicenseStringException;
 
 import ac.ucy.cs.spdx.dot.DotPath;
+import ac.ucy.cs.spdx.exception.LicenseNodeNotFoundException;
 import ac.ucy.cs.spdx.exception.SpdxLicensePairConflictError;
 import ac.ucy.cs.spdx.exception.UnsupportedSpdxVersionException;
 import ac.ucy.cs.spdx.exception.ViolationAnalysisInfo;
@@ -82,8 +83,13 @@ public class Main {
 			e.printStackTrace();
 		}
 		
-		ViolationAnalysisInfo analysisInfo = new ViolationAnalysisInfo(
-				pairAnomos, pairHunspell, pairMlpy);
+		ViolationAnalysisInfo analysisInfo = null;
+		try {
+			analysisInfo = new ViolationAnalysisInfo(
+					pairAnomos, pairHunspell, pairMlpy);
+		} catch (LicenseNodeNotFoundException e) {
+			e.printStackTrace();
+		}
 		
 		System.out.println(analysisInfo.toJson());
 	}

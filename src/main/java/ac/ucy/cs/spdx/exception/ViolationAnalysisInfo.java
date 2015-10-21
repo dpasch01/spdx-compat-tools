@@ -13,7 +13,7 @@ public class ViolationAnalysisInfo {
 	private boolean violationDetected;
 	private boolean isAdjustFeasible;
 
-	public ViolationAnalysisInfo(SpdxLicensePairConflictError... unaryErrors) {
+	public ViolationAnalysisInfo(SpdxLicensePairConflictError... unaryErrors) throws LicenseNodeNotFoundException {
 
 		ArrayList<SpdxLicensePairConflictError> conjunctiveBucket = new ArrayList<SpdxLicensePairConflictError>();
 		ArrayList<SpdxLicensePairConflictError> disjunctiveBucket = new ArrayList<SpdxLicensePairConflictError>();

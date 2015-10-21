@@ -1,11 +1,18 @@
 package ac.ucy.cs.spdx.compatibility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.KShortestPaths;
+import org.jgrapht.graph.SimpleDirectedGraph;
 
 import ac.ucy.cs.spdx.exception.LicenseNodeNotFoundException;
 import ac.ucy.cs.spdx.graph.LicenseEdge;
@@ -32,15 +39,60 @@ public class LicenseCompatibility {
 		return true;
 	}
 
+	public static Set<String> transitiveBfs(SimpleDirectedGraph<LicenseNode, LicenseEdge> graph, String startVertex) {
+		Set<String> visitedNodes = new LinkedHashSet<String>();
+		Set<String> visitedNonTransitiveNodes = new LinkedHashSet<String>();
+
+		Queue<String> queue = new LinkedList<String>();
+		queue.add(startVertex);
+		visitedNodes.add(startVertex);
+		while (!queue.isEmpty()) {
+			LicenseNode node = LicenseNode.findLicenseNode(queue.remove());
+			Iterator<LicenseEdge> children = graph.outgoingEdgesOf(node).iterator();
+			while (children.hasNext()) {
+				LicenseEdge edge = children.next();
+				String nextNode = edge.getV2().getNodeIdentifier();
+				if (!edge.isTransitive()) {
+					visitedNonTransitiveNodes.add(nextNode);
+				} else if (!visitedNodes.contains(nextNode)) {
+					visitedNodes.add(nextNode);
+					queue.add(nextNode);
+				}
+
+			}
+		}
+		visitedNodes.addAll(visitedNonTransitiveNodes);
+		return visitedNodes;
+	}
+
+	public static Set<String> bfs(SimpleDirectedGraph<LicenseNode, LicenseEdge> graph, String startVertex) {
+		Set<String> visitedNodes = new LinkedHashSet<String>();
+		Queue<String> queue = new LinkedList<String>();
+		queue.add(startVertex);
+		visitedNodes.add(startVertex);
+		while (!queue.isEmpty()) {
+			LicenseNode node = LicenseNode.findLicenseNode(queue.remove());
+			Iterator<LicenseEdge> children = graph.outgoingEdgesOf(node).iterator();
+			while (children.hasNext()) {
+				LicenseEdge edge = children.next();
+				String nextNode = edge.getV2().getNodeIdentifier();
+				if (!visitedNodes.contains(nextNode)) {
+					visitedNodes.add(nextNode);
+					queue.add(nextNode);
+				}
+
+			}
+		}
+		return visitedNodes;
+	}
+
 	public static boolean areCompatible(String... licenses) {
 
 		for (String license1 : licenses) {
 			for (String license2 : licenses) {
 				try {
 					if (!areCompatible(license1, license2)) {
-						if (!areCompatible(license2, license1)) {
-							return false;
-						}
+						return false;
 					}
 				} catch (LicenseNodeNotFoundException e) {
 					e.printStackTrace();
@@ -64,13 +116,12 @@ public class LicenseCompatibility {
 	 * @return boolean
 	 * @throws LicenseNodeNotFoundException
 	 */
-	public static boolean areCompatible(String licenseIdentifier1,
-			String licenseIdentifier2) throws LicenseNodeNotFoundException {
+	public static boolean areCompatible(String licenseIdentifier1, String licenseIdentifier2)
+			throws LicenseNodeNotFoundException {
 		LicenseNode v1 = null;
 		LicenseNode v2 = null;
 
 		for (LicenseNode ln : LicenseNode.getLicenseNodes()) {
-			
 			if (ln.containsLicense(licenseIdentifier2)) {
 				v2 = ln;
 			}
@@ -80,51 +131,25 @@ public class LicenseCompatibility {
 		}
 
 		if (v1 == null) {
-			throw new LicenseNodeNotFoundException(licenseIdentifier1
-					+ " not found in any license node.");
+			throw new LicenseNodeNotFoundException(licenseIdentifier1 + " not found in any license node.");
 		}
 
 		if (v2 == null) {
-			throw new LicenseNodeNotFoundException(licenseIdentifier2
-					+ " not found in any license node.");
+			throw new LicenseNodeNotFoundException(licenseIdentifier2 + " not found in any license node.");
 		}
 
 		if (v1.equals(v2)) {
 			return true;
 		}
 
-		List<GraphPath<LicenseNode, LicenseEdge>> paths = null;
-		try {
-			paths = new KShortestPaths<LicenseNode, LicenseEdge>(
-					LicenseGraph.licenseGraph, v1, Integer.MAX_VALUE)
-					.getPaths(v2);
-		} catch (IllegalArgumentException iae) {
-			return false;
+		Set<String> v1Visited = transitiveBfs(LicenseGraph.licenseGraph, v1.getNodeIdentifier());
+		Set<String> v2Visited = transitiveBfs(LicenseGraph.licenseGraph, v2.getNodeIdentifier());
+		if (v1Visited.contains(v2.getNodeIdentifier())) {
+			return true;
+		} else if (v2Visited.contains(v1.getNodeIdentifier())) {
+			return true;
 		}
 
-		if (paths != null) {
-			int pathsWithClosure = 0;
-
-			for (GraphPath<LicenseNode, LicenseEdge> gp : paths) {
-				List<LicenseEdge> edgeList = gp.getEdgeList();
-
-				if (edgeList.size() > 1) {
-					for (LicenseEdge le : edgeList)
-						if (le.isTransitive()) {
-							pathsWithClosure++;
-							break;
-						}
-				}
-			}
-
-			if (pathsWithClosure == paths.size()) {
-				for (GraphPath<LicenseNode, LicenseEdge> gp : paths) {
-					if (checkEdgesForTransitive(gp.getEdgeList()))
-						return true;
-				}
-			} else
-				return true;
-		}
 		return false;
 	}
 
@@ -139,8 +164,7 @@ public class LicenseCompatibility {
 	 * @param String
 	 * @return ArrayList<License>
 	 */
-	public static ArrayList<License> proposeLicense(String licenseIdentifier1,
-			String licenseIdentifier2) {
+	public static ArrayList<License> proposeLicense(String licenseIdentifier1, String licenseIdentifier2) {
 		HashSet<License> proposals = new HashSet<License>();
 		for (License l : License.getLicenses()) {
 			try {
@@ -165,29 +189,48 @@ public class LicenseCompatibility {
 	 * @param String
 	 *            []
 	 * @return ArrayList<License>
+	 * @throws LicenseNodeNotFoundException 
 	 */
-	public static ArrayList<License> proposeLicense(String... declared) {
-		HashSet<License> proposals = new HashSet<License>();
-		boolean areCompatible = false;
+	public static ArrayList<License> proposeLicense(String... declared){
+		Set<String> proposals = new HashSet<String>();
+		ArrayList<License> licensearray = new ArrayList<License>();
+		LicenseNode v1 = null;
 
-		outerloop: for (License l : License.getLicenses()) {
-			areCompatible = true;
-			for (String declaredLicense : declared) {
+		int i = 0;
+		for (String licenseIdentifier1 : declared) {
+			for (LicenseNode ln : LicenseNode.getLicenseNodes()) {
+				if (ln.containsLicense(licenseIdentifier1)) {
+					v1 = ln;
+				}
+			}
+
+			if (v1 == null) {
 				try {
-					if (!areCompatible(declaredLicense, l.getIdentifier())) {
-						areCompatible = false;
-						continue outerloop;
-					}
+					throw new LicenseNodeNotFoundException(licenseIdentifier1 + " not found in any license node.");
 				} catch (LicenseNodeNotFoundException e) {
-					e.printStackTrace();
 					continue;
 				}
 			}
-			if (areCompatible) {
-				proposals.add(l);
+
+			Set<String> v1Visited = transitiveBfs(LicenseGraph.licenseGraph, v1.getNodeIdentifier());
+
+			if (i == 0) {
+				proposals.addAll(v1Visited);
+			} else {
+
+				proposals.retainAll(v1Visited);
 			}
+
+			if (proposals.isEmpty()) {
+				return new ArrayList<License>();
+			}
+			i++;
 		}
 
-		return new ArrayList<License>(proposals);
+		proposals.removeAll(Arrays.asList(declared));
+		for (String liString : proposals) {
+			licensearray.add(License.findLicense(liString));
+		}
+		return licensearray;
 	}
 }

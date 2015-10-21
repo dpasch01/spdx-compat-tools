@@ -29,7 +29,7 @@ public class SpdxLicensePairConflictError {
 					spdxCaptured.getFileName()
 							+ ".rdf SPDX version is not supported.");
 		}
-
+ 
 		LicenseExpression expression = spdxCaptured.getLicenseExpression();
 
 		this.declaredLicenses = new ArrayList<String>();
@@ -61,17 +61,12 @@ public class SpdxLicensePairConflictError {
 			this.setConcludedExists(false);
 		}
 		
-		//		if(this.isDeclaredExistsInExtracted()){
-		//			throw new ExtractedDeclaredMismatchException("Extracted Licenses do not match with declared ones.");
-		//		}
-		
 		this.proposedLicenses = new ArrayList<License>();
 		if ((!expression.isDisjunctive())
-				&& (!LicenseCompatibility.areCompatible(expression
-						.getLicensesArray()))) {
+				&& (!LicenseCompatibility.areCompatible(spdxCaptured.getReferencedLicenses().values().toArray(new String[spdxCaptured.getReferencedLicenses().values().size()])))) {
 			this.setCompatible(false);
 			this.proposedLicenses.addAll(LicenseCompatibility
-					.proposeLicense(expression.getLicensesArray()));
+					.proposeLicense(spdxCaptured.getReferencedLicenses().values().toArray(new String[spdxCaptured.getReferencedLicenses().values().size()])));
 			if (this.proposedLicenses.isEmpty()) {
 				setAdjustable(false);
 			}
@@ -189,44 +184,39 @@ public class SpdxLicensePairConflictError {
 
 	public String toJson() {
 		StringBuilder errorJSON = new StringBuilder();
-		errorJSON.append("{"+"\"isDisjunctive\"" + ":" + this.spdxCaptured.getLicenseExpression().isDisjunctive()+ ", \"file\"" + ":" + "\""
-				+ this.getSpdxCaptured().getFileName() + "\",\"declared\":[");
+		errorJSON.append("{" + "\"file\"" + ":" + "\"" + this.getSpdxCaptured().getFileName() + "\",\"extracted\":[");
 
+		for (String extracted : this.spdxCaptured.getReferencedLicenses().values()) {
+			ArrayList<String> extractedLicenses = new ArrayList<String>();
+			extractedLicenses.addAll(Arrays.asList(LicenseExpression.ignoredLicenseList));
+			if (!extractedLicenses.contains(extracted)) {
+				errorJSON.append("{\"identifier\"" + ":" + "\"" + extracted + "\"},");
+			}
+		}
+
+		if (!this.declaredLicenses.isEmpty()) {
+			errorJSON.deleteCharAt(errorJSON.length() - 1);
+		}
+
+		errorJSON.append("],\"declared\":[");
 		for (String declared : this.declaredLicenses) {
-			errorJSON
-					.append("{\"identifier\"" + ":" + "\"" + declared + "\"},");
+			errorJSON.append("{\"identifier\"" + ":" + "\"" + declared + "\"},");
 		}
 
 		if (!this.declaredLicenses.isEmpty()) {
 			errorJSON.deleteCharAt(errorJSON.length() - 1);
 		}
 		errorJSON.append("]" + "," + "\"compatible\"" + ":");
-		errorJSON.append("" + this.areCompatible + "" + "," + "\"adjustable\""
-				+ ":" + "" + this.isAdjustable + "" + ","+
-				"\"extractedMismatch\""+":"+""+!this.isDeclaredExistsInExtracted()+""+","+
-				"\"concludedExists\""+":"+""+this.isConcludedExists()+""+
-				","+"\"proposal\""
-				+ ":" + "[");
+		errorJSON.append("" + this.areCompatible + "" + "," + "\"adjustable\"" + ":" + "" + this.isAdjustable + "" + ","
+				+ "\"proposal\"" + ":" + "[");
 
 		for (License license : this.proposedLicenses) {
-			errorJSON.append("{\"identifier\"" + ":" + "\""
-					+ license.getIdentifier() + "\"},");
+			errorJSON.append("{\"identifier\"" + ":" + "\"" + license.getIdentifier() + "\"},");
 		}
 
 		if (!this.proposedLicenses.isEmpty()) {
 			errorJSON.deleteCharAt(errorJSON.length() - 1);
 		}
-		
-		errorJSON.append("],\"extracted\":[");
-		for (String extracted : this.extractedLicenses) {
-			errorJSON
-					.append("{\"identifier\"" + ":" + "\"" + extracted + "\"},");
-		}
-
-		if (!this.extractedLicenses.isEmpty()) {
-			errorJSON.deleteCharAt(errorJSON.length() - 1);
-		}
-		
 		errorJSON.append("]}");
 
 		return errorJSON.toString();

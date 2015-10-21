@@ -74,8 +74,9 @@
 			<artifactId>saxon-dom</artifactId>
 			<version>8.7</version>
 		</dependency>
-		
-		<>dependency>
+
+				
+		<dependency>
 			<groupId>org.spdx</groupId>
 			<artifactId>spdx-tools</artifactId>
 			<version>2.0.0</version>
@@ -90,7 +91,7 @@
 			<systemPath>/var/lib/openshift/557d46b7e0b8cd11f500002f/app-root/repo/src/main/webapp/WEB-INF/lib/cors-filter-2.4.jar</systemPath>
 		</dependency>
 		
-		<!-->dependency>
+		<!--dependency>
 			<groupId>org.spdx</groupId>
 			<artifactId>spdx-tools</artifactId>
 			<version>2.0.0</version>

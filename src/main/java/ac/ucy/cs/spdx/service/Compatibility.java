@@ -17,6 +17,7 @@ import ac.ucy.cs.spdx.compatibility.LicenseCompatibility;
 import ac.ucy.cs.spdx.dot.DotPath;
 import ac.ucy.cs.spdx.exception.LicenseEdgeAlreadyExistsException;
 import ac.ucy.cs.spdx.exception.LicenseNodeAlreadyExistsException;
+import ac.ucy.cs.spdx.exception.LicenseNodeNotFoundException;
 import ac.ucy.cs.spdx.graph.LicenseGraph;
 import ac.ucy.cs.spdx.graph.LicenseNode;
 import ac.ucy.cs.spdx.license.License;
@@ -37,8 +38,7 @@ public class Compatibility {
 		File dotFile = new File(DotPath.GRAPHDOT_PATH);
 
 		ResponseBuilder response = Response.ok((Object) dotFile);
-		response.header("Content-Disposition", "attachment; filename="
-				+ DotPath.GRAPHDOT_PATH);
+		response.header("Content-Disposition", "attachment; filename=" + DotPath.GRAPHDOT_PATH);
 		return response.build();
 
 	}
@@ -71,7 +71,7 @@ public class Compatibility {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		ArrayList<String> licenses = new ArrayList<String>();
 		JsonNode licensesJSON = fileNode.get("licenses");
 		StringBuilder compatibleJSON = new StringBuilder();
@@ -82,25 +82,22 @@ public class Compatibility {
 			licenses.add(licenseId);
 		}
 
-		boolean compatible = LicenseCompatibility.areCompatible(licenses
-				.toArray(new String[licenses.size()]));
+		boolean compatible = LicenseCompatibility.areCompatible(licenses.toArray(new String[licenses.size()]));
 		boolean adjustable = true;
 		ArrayList<License> proposed = new ArrayList<License>();
 
 		if (!compatible) {
-			LicenseCompatibility.proposeLicense(licenses
-					.toArray(new String[licenses.size()]));
+			LicenseCompatibility.proposeLicense(licenses.toArray(new String[licenses.size()]));
 		}
 
 		if (proposed.isEmpty()) {
 			adjustable = false;
 		}
 
-		compatibleJSON.append("{\"compatible\":\"" + compatible
-				+ "\",\"adjustable\":\"" + adjustable + "\",\"proposals\":[");
+		compatibleJSON
+				.append("{\"compatible\":\"" + compatible + "\",\"adjustable\":\"" + adjustable + "\",\"proposals\":[");
 		for (License proposal : proposed) {
-			compatibleJSON.append("{\"identifier\":\""
-					+ proposal.getIdentifier() + "\"},");
+			compatibleJSON.append("{\"identifier\":\"" + proposal.getIdentifier() + "\"},");
 		}
 
 		if (adjustable) {
@@ -116,7 +113,7 @@ public class Compatibility {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String addNode(String jsonString) {
-		
+
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode licenseNode = null;
 		try {
@@ -126,23 +123,22 @@ public class Compatibility {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		ArrayList<String> licenses = new ArrayList<String>();
 		String nodeIdentifier = licenseNode.get("nodeIdentifier").toString();
-		nodeIdentifier = nodeIdentifier.substring(1,
-				nodeIdentifier.length() - 1);
+		nodeIdentifier = nodeIdentifier.substring(1, nodeIdentifier.length() - 1);
 
 		String nodeCategory = licenseNode.get("nodeCategory").toString();
 		nodeCategory = nodeCategory.substring(1, nodeCategory.length() - 1);
 		Category category = Category.UNCATEGORIZED;
 
-		if(nodeCategory=="PERMISSIVE") {
+		if (nodeCategory == "PERMISSIVE") {
 			category = Category.PERMISSIVE;
-		}else if(nodeCategory=="WEAK_COPYLEFT") {
+		} else if (nodeCategory == "WEAK_COPYLEFT") {
 			category = Category.WEAK_COPYLEFT;
-		}else if(nodeCategory=="STRONG_COPYLEFT") {
+		} else if (nodeCategory == "STRONG_COPYLEFT") {
 			category = Category.STRONG_COPYLEFT;
-		}else{
+		} else {
 			category = Category.UNCATEGORIZED;
 		}
 
@@ -155,18 +151,15 @@ public class Compatibility {
 		}
 
 		try {
-			LicenseGraph.addLicenseNode(nodeIdentifier, category,
-					licenses.toArray(new String[licenses.size()]));
+			LicenseGraph.addLicenseNode(nodeIdentifier, category, licenses.toArray(new String[licenses.size()]));
 		} catch (LicenseNodeAlreadyExistsException e) {
 			e.printStackTrace();
-			return "{\"status\":\"failure\",\"message\":\"" + e.getMessage()
-					+ "\"}";
+			return "{\"status\":\"failure\",\"message\":\"" + e.getMessage() + "\"}";
 		}
 
 		LicenseGraph.exportGraph();
 
-		return "{\"status\":\"success\",\"message\":\"" + nodeIdentifier
-				+ " added in the system.\"}";// {"nodeIdentifier":"Caldera","nodeCategory":"PERMISSIVE","nodelicenses":[{"identifier":"Caldera"}]}
+		return "{\"status\":\"success\",\"message\":\"" + nodeIdentifier + " added in the system.\"}";// {"nodeIdentifier":"Caldera","nodeCategory":"PERMISSIVE","nodelicenses":[{"identifier":"Caldera"}]}
 	}
 
 	@POST
@@ -184,11 +177,10 @@ public class Compatibility {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		ArrayList<String> licenseNodes = new ArrayList<String>();
 		String nodeIdentifier = licenseEdge.get("nodeIdentifier").toString();
-		nodeIdentifier = nodeIdentifier.substring(1,
-				nodeIdentifier.length() - 1);
+		nodeIdentifier = nodeIdentifier.substring(1, nodeIdentifier.length() - 1);
 
 		String transitivity = licenseEdge.get("transitivity").toString();
 		transitivity = transitivity.substring(1, transitivity.length() - 1);
@@ -207,16 +199,15 @@ public class Compatibility {
 					licenseNodes.toArray(new String[licenseNodes.size()]));
 		} catch (LicenseEdgeAlreadyExistsException e) {
 			e.printStackTrace();
-			return "{\"status\":\"failure\",\"message\":\"" + e.getMessage()
-					+ "\"}";
+			return "{\"status\":\"failure\",\"message\":\"" + e.getMessage() + "\"}";
 		}
 
 		LicenseGraph.exportGraph();
 
-		return "{\"status\":\"success\",\"message\":\"" + nodeIdentifier
-				+ " -> " + licenseNodes.toString() + " added in the system.\"}";//{"nodeIdentifier":"Caldera","transitivity":"true","nodeIdentifiers":[{"identifier":"Apache-2.0"}]}
+		return "{\"status\":\"success\",\"message\":\"" + nodeIdentifier + " -> " + licenseNodes.toString()
+				+ " added in the system.\"}";// {"nodeIdentifier":"Caldera","transitivity":"true","nodeIdentifiers":[{"identifier":"Apache-2.0"}]}
 	}
-	
+
 	@GET
 	@Path("/licenses/")
 	@Produces(MediaType.APPLICATION_JSON)
