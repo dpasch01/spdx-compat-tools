@@ -28,3 +28,13 @@ see [SPDX](https://spdx.org/about-spdx)
 ----
 ## Usage
 Everything is available under *http://localhost:8080/SPDXLicenseCompatibility/rest/*
+
+| Path                 | Method | Request                                                                                         | Response                                                                                                                        |
+|----------------------|--------|-------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| /license/graph/      | GET    | -                                                                                               | Download graph.dot file                                                                                                         |
+| /license/nodes/      | GET    | -                                                                                               | [[CDDL-1.1, CDDL-1.0], [Apache-1.0],..., [BSD-2-Clause-FreeBSD]]                                                                |
+| /license/node/       | POST   | {"nodeIdentifier":"AAL","nodeCategory":"WEAK_COPYLEFT","nodelicenses":[{"identifier":"AAL"}]}   | {"status":"success","message":"AAL added in the system."}                                                                       |
+| /license/compatible/ | POST   | {"licenses":[{"identifier":"Apache-2.0"},{"identifier":"MPL-2.0"}] }                            | {,"compatible": "true","adjustable": "false","proposals": [0] }                                                                 |
+| /license/edges/      | GET    | -                                                                                               | [[Apache-2.0] -> [LGPL-3.0+, LGPL-3.0], [MIT, X11] -> [BSD-2-Clause-FreeBSD],..., [LGPL-3.0+, LGPL-3.0] -> [GPL-3.0, GPL-3.0+]] |
+| /license/edge/       | POST   | {"nodeIdentifier":"APSL-1.0","transitivity":true,"nodeIdentifiers":[{"identifier":"AGPL-1.0"}]} | {"status":"success","message":"APSL-1.0 -> [AGPL-1.0] added in the system."}                                                    |
+| /license/licenses/   | GET    | -                                                                                               | {"licenses":[{"identifier":"GPL-2.0+"},{"identifier":"BSD-2-Clause-FreeBSD"},...,{"identifier":"X11"}]}                         |
