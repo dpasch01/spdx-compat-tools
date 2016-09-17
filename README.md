@@ -29,7 +29,7 @@ see [SPDX](https://spdx.org/about-spdx)
 ## Usage
 Everything is available under *http://localhost:8080/SPDXLicenseCompatibility/rest/*
 
-#Graph expansion resources
+### Graph expansion resources
 
 | Path                 | Method | Request                                                                                         | Response                                                                                                                        |
 |----------------------|--------|-------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
@@ -41,7 +41,7 @@ Everything is available under *http://localhost:8080/SPDXLicenseCompatibility/re
 | /license/edge/       | POST   | {"nodeIdentifier":"APSL-1.0","transitivity":true,"nodeIdentifiers":[{"identifier":"AGPL-1.0"}]} | {"status":"success","message":"APSL-1.0 -> [AGPL-1.0] added in the system."}                                                    |
 | /license/licenses/   | GET    | -                                                                                               | {"licenses":[{"identifier":"GPL-2.0+"},{"identifier":"BSD-2-Clause-FreeBSD"},...,{"identifier":"X11"}]}                         |
 
-#SPDX compatibility resources
+### SPDX compatibility resources
 
 | Path            | Method | Request                                                                                             | Response                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 |-----------------|--------|-----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
