@@ -62,8 +62,7 @@ public class SpdxLicensePairConflictError {
 		}
 		
 		this.proposedLicenses = new ArrayList<License>();
-		if ((!expression.isDisjunctive())
-				&& (!LicenseCompatibility.areCompatible(spdxCaptured.getReferencedLicenses().values().toArray(new String[spdxCaptured.getReferencedLicenses().values().size()])))) {
+		if ((!LicenseCompatibility.areCompatible(spdxCaptured.getReferencedLicenses().values().toArray(new String[spdxCaptured.getReferencedLicenses().values().size()])))) {
 			this.setCompatible(false);
 			this.proposedLicenses.addAll(LicenseCompatibility
 					.proposeLicense(spdxCaptured.getReferencedLicenses().values().toArray(new String[spdxCaptured.getReferencedLicenses().values().size()])));

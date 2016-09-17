@@ -95,7 +95,7 @@ public class SpdxViolationAnalysis {
 	@Path("/validate/")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	public String validateSpdx(String jsonString) {
+	public String validateSpdx(String jsonString) throws InvalidSPDXAnalysisException {
 
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode fileNode = null;
@@ -114,15 +114,18 @@ public class SpdxViolationAnalysis {
 		content = content.substring(1, content.length() - 1);
 
 		SpdxLicensePairConflictError analysis = null;
-
+		CaptureLicense captured = null;
+		
 		try {
-			analysis = new SpdxLicensePairConflictError(new CaptureLicense(ParseRdf.parseToRdf(fileName, content)));
+			captured = new CaptureLicense(ParseRdf.parseToRdf(fileName, content));
 		} catch (InvalidLicenseStringException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (InvalidSPDXAnalysisException e) {
-			e.printStackTrace();
+		}
+		
+		try {
+			analysis = new SpdxLicensePairConflictError(captured);
 		} catch (UnsupportedSpdxVersionException e) {
 			e.printStackTrace();
 		}

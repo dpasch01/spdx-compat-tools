@@ -52,7 +52,7 @@ public class LicenseCompatibility {
 			while (children.hasNext()) {
 				LicenseEdge edge = children.next();
 				String nextNode = edge.getV2().getNodeIdentifier();
-				if (!edge.isTransitive()) {
+				if (edge.isTransitive()) {
 					visitedNonTransitiveNodes.add(nextNode);
 				} else if (!visitedNodes.contains(nextNode)) {
 					visitedNodes.add(nextNode);
